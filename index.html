@@ -1,0 +1,1821 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PMD Website Translation Project Management Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        /* Login Screen Styles */
+        .login-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+        }
+
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            pointer-events: none;
+        }
+
+        /* Tab System */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tab-btn {
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            color: #3b82f6;
+        }
+
+        .tab-btn.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+
+        /* Progress Bars */
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Status Badges */
+        .status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #f59e0b;
+        }
+
+        .status-ongoing {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+
+        .status-completed {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        /* Animation Classes */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .pulse-animation {
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        /* Data Management Styles */
+        .data-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            z-index: 1000;
+        }
+
+        .backup-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .backup-active {
+            background-color: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        .backup-inactive {
+            background-color: #ef4444;
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="bg-gray-50 min-h-full"><!-- Data Status Indicator -->
+  <div id="data-status" class="data-status"><span class="backup-indicator backup-active" id="backup-indicator"></span> <span id="backup-status">Auto-backup active</span>
+  </div><!-- Login Screen -->
+  <div id="login-screen" class="fixed inset-0 login-container flex items-center justify-center z-50">
+   <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
+    <div class="text-center mb-8">
+     <div class="mx-auto w-24 h-16 mb-4 flex items-center justify-center"><img src="https://white-associates.net/wp-content/uploads/2023/01/WhiteAssociates_Final-Logo.png" alt="W&amp;A Logo" class="max-w-full max-h-full object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+      <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center" style="display: none;">
+       <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+       </svg>
+      </div>
+     </div>
+     <h2 class="text-2xl font-bold text-gray-900">PMD Translation Portal</h2>
+     <p class="text-gray-600 mt-2">Client Access Login</p>
+    </div>
+    <form onsubmit="handleLogin(event)" class="space-y-6">
+     <div><label class="block text-sm font-medium text-gray-700 mb-2">User ID</label> <input type="text" id="user-id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your User ID" required>
+     </div>
+     <div><label class="block text-sm font-medium text-gray-700 mb-2">Password</label> <input type="password" id="password" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your Password" required>
+     </div><button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200"> Sign In </button>
+    </form>
+    <div class="mt-6 text-center">
+     <div class="text-sm text-gray-600">
+      <p class="font-semibold mb-3">Powered by WHITE &amp; Associates</p><img src="https://white-associates.net/wp-content/uploads/2023/01/Tagline.png.webp" alt="WHITE &amp; Associates" class="mx-auto max-w-48 h-auto" onerror="this.style.display='none';">
+     </div>
+    </div>
+   </div>
+  </div><!-- Main Application -->
+  <div id="main-app" class="max-w-7xl mx-auto p-6 hidden"><!-- Header -->
+   <div class="bg-gradient-to-r from-blue-900 to-blue-700 text-white p-6 rounded-lg mb-6 shadow-lg">
+    <div class="flex items-center justify-between">
+     <div>
+      <h1 class="text-3xl font-bold mb-2">PMD Website Translation Project</h1>
+      <p class="text-blue-100">Comprehensive Project Management Portal with Data Persistence</p>
+     </div>
+     <div class="flex items-center space-x-4">
+      <div class="text-right">
+       <div class="bg-white bg-opacity-20 rounded-lg p-4">
+        <div class="text-sm text-blue-100">
+         Overall Progress
+        </div>
+        <div class="text-2xl font-bold" id="overall-progress">
+         60%
+        </div>
+       </div>
+      </div><button onclick="showDataManagement()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"> 💾 Data Management </button> <button onclick="logout()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"> Logout </button>
+     </div>
+    </div>
+   </div><!-- Navigation Tabs -->
+   <div class="bg-white rounded-lg shadow-md mb-6">
+    <div class="border-b border-gray-200">
+     <nav class="flex space-x-8 px-6"><button class="tab-btn py-4 px-2 border-b-2 border-blue-500 text-blue-600 font-medium" data-tab="overview">Project Overview</button> <button class="tab-btn py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="cat-framework">CAT Framework</button> <button class="tab-btn py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="content-management">Content Management</button> <button class="tab-btn py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="translation-tracker">Translation Tracker</button> <button class="tab-btn py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="meetings">Meetings &amp; Reports</button> <button class="tab-btn py-4 px-2 border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="resources">Resources</button>
+     </nav>
+    </div>
+   </div><!-- Project Overview Tab -->
+   <div id="overview" class="tab-content active">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6"><!-- Project Stats -->
+     <div class="bg-white p-6 rounded-lg shadow-md">
+      <h3 class="text-lg font-semibold mb-4 text-gray-800">Project Statistics</h3>
+      <div class="space-y-3">
+       <div class="flex justify-between"><span class="text-gray-600">Total Sections:</span> <span class="font-semibold" id="total-sections">5</span>
+       </div>
+       <div class="flex justify-between"><span class="text-gray-600">Completed:</span> <span class="font-semibold text-green-600" id="completed-sections">3</span>
+       </div>
+       <div class="flex justify-between"><span class="text-gray-600">On-going:</span> <span class="font-semibold text-blue-600" id="ongoing-sections">0</span>
+       </div>
+       <div class="flex justify-between"><span class="text-gray-600">Pending:</span> <span class="font-semibold text-yellow-600" id="pending-sections">2</span>
+       </div>
+      </div>
+     </div><!-- Timeline -->
+     <div class="bg-white p-6 rounded-lg shadow-md">
+      <h3 class="text-lg font-semibold mb-4 text-gray-800">Project Timeline</h3>
+      <div class="space-y-3">
+       <div><label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label> <input type="date" id="start-date" class="w-full p-2 border border-gray-300 rounded-md">
+       </div>
+       <div><label class="block text-sm font-medium text-gray-700 mb-1">Target End Date</label> <input type="date" id="end-date" class="w-full p-2 border border-gray-300 rounded-md">
+       </div>
+       <div class="pt-2"><span class="text-sm text-gray-600">Days Remaining: </span> <span class="font-semibold" id="days-remaining">-</span>
+       </div>
+      </div>
+     </div><!-- Team Members -->
+     <div class="bg-white p-6 rounded-lg shadow-md">
+      <h3 class="text-lg font-semibold mb-4 text-gray-800">Team Members</h3>
+      <div class="space-y-2" id="team-list">
+       <div class="flex items-center justify-between bg-blue-50 p-2 rounded">
+        <div class="flex items-center space-x-2">
+         <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+          PM
+         </div><span class="text-sm">Project Manager</span>
+        </div>
+       </div>
+      </div><button onclick="addTeamMember()" class="mt-3 text-blue-600 text-sm hover:text-blue-800">+ Add Team Member</button>
+     </div>
+    </div><!-- Website Structure Overview -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+     <h3 class="text-lg font-semibold mb-4 text-gray-800">Website Structure (jpm.gov.my/ms)</h3>
+     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="border border-gray-200 rounded-lg p-4">
+       <h4 class="font-semibold text-green-600 mb-2">✅ 1. HOMEPAGE CONTENT</h4>
+       <ul class="text-sm text-gray-600 space-y-1">
+        <li>• Header, Body &amp; Footer</li>
+        <li>• Hero Banner</li>
+        <li>• Pengumuman Terkini</li>
+        <li>• Berita &amp; Aktiviti</li>
+        <li>• Pautan Pantas</li>
+       </ul>
+       <div class="mt-2 text-xs text-green-600 font-semibold">
+        COMPLETED
+       </div>
+      </div>
+      <div class="border border-gray-200 rounded-lg p-4">
+       <h4 class="font-semibold text-green-600 mb-2">✅ 2. FAQ SECTION</h4>
+       <ul class="text-sm text-gray-600 space-y-1">
+        <li>• Frequently Asked Questions</li>
+        <li>• Help Documentation</li>
+        <li>• User Guides</li>
+        <li>• Support Information</li>
+       </ul>
+       <div class="mt-2 text-xs text-green-600 font-semibold">
+        COMPLETED
+       </div>
+      </div>
+      <div class="border border-gray-200 rounded-lg p-4">
+       <h4 class="font-semibold text-green-600 mb-2">✅ 3. INFO KORPORAT</h4>
+       <ul class="text-sm text-gray-600 space-y-1">
+        <li>• Mengenai Kami</li>
+        <li>• Carta Organisasi</li>
+        <li>• Pengenalan &amp; Sejarah</li>
+        <li>• Visi, Misi &amp; Objektif</li>
+        <li>• Bahagian-bahagian</li>
+       </ul>
+       <div class="mt-2 text-xs text-green-600 font-semibold">
+        COMPLETED
+       </div>
+      </div>
+      <div class="border border-gray-200 rounded-lg p-4">
+       <h4 class="font-semibold text-yellow-600 mb-2">⏳ 4. QUICK ACCESS BAR</h4>
+       <ul class="text-sm text-gray-600 space-y-1">
+        <li>• Direktori</li>
+        <li>• Info Rekod</li>
+        <li>• Perolehan</li>
+        <li>• Suara Anda</li>
+        <li>• Statistik Perkhidmatan</li>
+        <li>• Pekeliling</li>
+        <li>• Mesej Integriti</li>
+        <li>• Info Perakaunan</li>
+       </ul>
+       <div class="mt-2 text-xs text-yellow-600 font-semibold">
+        PENDING
+       </div>
+      </div>
+      <div class="border border-gray-200 rounded-lg p-4">
+       <h4 class="font-semibold text-yellow-600 mb-2">⏳ 5. FOOTER CONTENT</h4>
+       <ul class="text-sm text-gray-600 space-y-1">
+        <li>• Dasar Privasi</li>
+        <li>• Dasar Keselamatan</li>
+        <li>• Penafian</li>
+       </ul>
+       <div class="mt-2 text-xs text-yellow-600 font-semibold">
+        PENDING
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- CAT Framework Tab -->
+   <div id="cat-framework" class="tab-content">
+    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+     <h3 class="text-xl font-semibold mb-4 text-gray-800">CAT Framework Implementation</h3>
+     <p class="text-gray-600 mb-6">Computer-Assisted Translation framework with persistent data storage</p>
+     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><!-- Consistency -->
+      <div class="border border-blue-200 rounded-lg p-6">
+       <div class="flex items-center mb-4">
+        <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+         C
+        </div>
+        <h4 class="text-lg font-semibold ml-3">Consistency</h4>
+       </div>
+       <ul class="space-y-2 text-sm text-gray-600">
+        <li>✓ Standardized terminology database</li>
+        <li>✓ Translation memory system</li>
+        <li>✓ Style guide compliance</li>
+        <li>✓ Consistent formatting</li>
+       </ul>
+       <div class="mt-4"><button onclick="openTerminologyManager()" class="bg-blue-500 text-white px-4 py-2 rounded text-sm hover:bg-blue-600">Manage Terminology</button>
+       </div>
+      </div><!-- Accuracy -->
+      <div class="border border-green-200 rounded-lg p-6">
+       <div class="flex items-center mb-4">
+        <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">
+         A
+        </div>
+        <h4 class="text-lg font-semibold ml-3">Accuracy</h4>
+       </div>
+       <ul class="space-y-2 text-sm text-gray-600">
+        <li>✓ Multi-level review process</li>
+        <li>✓ Quality assurance checks</li>
+        <li>✓ Linguistic validation</li>
+        <li>✓ Cultural adaptation</li>
+       </ul>
+       <div class="mt-4"><button onclick="openQualityChecker()" class="bg-green-500 text-white px-4 py-2 rounded text-sm hover:bg-green-600">Quality Checker</button>
+       </div>
+      </div><!-- Timeliness -->
+      <div class="border border-orange-200 rounded-lg p-6">
+       <div class="flex items-center mb-4">
+        <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">
+         T
+        </div>
+        <h4 class="text-lg font-semibold ml-3">Timeliness</h4>
+       </div>
+       <ul class="space-y-2 text-sm text-gray-600">
+        <li>✓ Automated workflow management</li>
+        <li>✓ Real-time progress tracking</li>
+        <li>✓ Deadline monitoring</li>
+        <li>✓ Resource optimization</li>
+       </ul>
+       <div class="mt-4"><button onclick="openTimelineManager()" class="bg-orange-500 text-white px-4 py-2 rounded text-sm hover:bg-orange-600">Timeline Manager</button>
+       </div>
+      </div>
+     </div>
+    </div><!-- CAT Tools Integration -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+     <h3 class="text-lg font-semibold mb-4 text-gray-800">CAT Tools Integration</h3>
+     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div>
+       <h4 class="font-semibold mb-3">Translation Memory</h4>
+       <div class="bg-gray-50 p-4 rounded-lg">
+        <div class="flex justify-between items-center mb-2"><span class="text-sm text-gray-600">Memory Leverage</span> <span class="text-sm font-semibold" id="tm-leverage">85%</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+         <div class="bg-blue-500 h-2 rounded-full progress-bar" style="width: 85%" id="tm-progress"></div>
+        </div>
+        <div class="text-xs text-gray-500">
+         <div>
+          Segments: <span id="tm-segments">1,247</span>
+         </div>
+         <div>
+          Auto-captured: <span id="tm-auto">892</span>
+         </div>
+        </div>
+       </div>
+      </div>
+      <div>
+       <h4 class="font-semibold mb-3">Terminology Database</h4>
+       <div class="bg-gray-50 p-4 rounded-lg">
+        <div class="flex justify-between items-center mb-2"><span class="text-sm text-gray-600">Terms Defined</span> <span class="text-sm font-semibold" id="terms-count">156</span>
+        </div>
+        <div class="text-xs text-gray-500 mb-2">
+         <div>
+          Auto-detected: <span id="terms-auto">89</span>
+         </div>
+         <div>
+          Untranslated: <span id="terms-untranslated">12</span>
+         </div>
+        </div><button onclick="addTerm()" class="text-blue-600 text-sm hover:text-blue-800">+ Add New Term</button>
+       </div>
+      </div>
+      <div>
+       <h4 class="font-semibold mb-3">Auto-Learning System</h4>
+       <div class="bg-gray-50 p-4 rounded-lg">
+        <div class="flex justify-between items-center mb-2"><span class="text-sm text-gray-600">Learning Status</span>
+         <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse" title="Active"></div>
+        </div>
+        <div class="text-xs text-gray-500 mb-2">
+         <div>
+          New patterns: <span id="learning-patterns">34</span>
+         </div>
+         <div>
+          Suggestions: <span id="learning-suggestions">67</span>
+         </div>
+        </div><button onclick="viewLearningLog()" class="text-blue-600 text-sm hover:text-blue-800">View Learning Log</button>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Content Management Tab -->
+   <div id="content-management" class="tab-content">
+    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+     <div class="flex justify-between items-center mb-4">
+      <h3 class="text-xl font-semibold text-gray-800">Content Management System</h3>
+      <div class="flex space-x-2">
+       <div class="bg-blue-50 px-3 py-1 rounded-full text-xs text-blue-700">
+        🌐 Auto-Translation Enabled
+       </div><button onclick="openReportsFolder()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">View Reports</button>
+      </div>
+     </div><!-- Content Sections Table -->
+     <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+       <thead class="bg-gray-50">
+        <tr>
+         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File Name</th>
+         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">View &amp; Download</th>
+        </tr>
+       </thead>
+       <tbody class="bg-white divide-y divide-gray-200" id="content-table-body">
+        <tr>
+         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">1. HOMEPAGE CONTENT (Header, Body &amp; Footer)</td>
+         <td class="px-6 py-4 whitespace-nowrap"><select class="px-3 py-1 border border-gray-300 rounded text-sm status-select" data-section="homepage" data-old-status="completed" onchange="updateContentStatus(this)"> <option value="pending">PENDING</option> <option value="ongoing">ON-GOING</option> <option value="completed" selected>COMPLETED</option> </select></td>
+         <td class="px-6 py-4 whitespace-nowrap"><button onclick="viewDocument('homepage', '1lF2MCE3FWdzW6LFs83nFGYdmRrlgvL4R')" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"> VIEW &amp; DOWNLOAD </button></td>
+        </tr>
+        <tr>
+         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">2. HOMEPAGE CONTENT - FAQ SECTION</td>
+         <td class="px-6 py-4 whitespace-nowrap"><select class="px-3 py-1 border border-gray-300 rounded text-sm status-select" data-section="faq" data-old-status="completed" onchange="updateContentStatus(this)"> <option value="pending">PENDING</option> <option value="ongoing">ON-GOING</option> <option value="completed" selected>COMPLETED</option> </select></td>
+         <td class="px-6 py-4 whitespace-nowrap"><button onclick="viewDocument('faq', '1Scl8WR_dSlviBsFuEjvrbZJGbAnE0A1X')" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"> VIEW &amp; DOWNLOAD </button></td>
+        </tr>
+        <tr>
+         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">3. MAIN MENU NAVIGATION - INFO KORPORAT</td>
+         <td class="px-6 py-4 whitespace-nowrap"><select class="px-3 py-1 border border-gray-300 rounded text-sm status-select" data-section="infokorporat" data-old-status="completed" onchange="updateContentStatus(this)"> <option value="pending">PENDING</option> <option value="ongoing">ON-GOING</option> <option value="completed" selected>COMPLETED</option> </select></td>
+         <td class="px-6 py-4 whitespace-nowrap"><button onclick="viewDocument('infokorporat', '10lyQHriWzK480f1oiRZFLxy7PtIOWetU')" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"> VIEW &amp; DOWNLOAD </button></td>
+        </tr>
+        <tr>
+         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">4. HOMEPAGE CONTENT - BODY: QUICK ACCESS BAR</td>
+         <td class="px-6 py-4 whitespace-nowrap"><select class="px-3 py-1 border border-gray-300 rounded text-sm status-select" data-section="quickaccess" data-old-status="pending" onchange="updateContentStatus(this)"> <option value="pending" selected>PENDING</option> <option value="ongoing">ON-GOING</option> <option value="completed">COMPLETED</option> </select></td>
+         <td class="px-6 py-4 whitespace-nowrap"><button onclick="viewDocument('quickaccess', '1lF2MCE3FWdzW6LFs83nFGYdmRrlgvL4R')" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"> VIEW &amp; DOWNLOAD </button></td>
+        </tr>
+        <tr>
+         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">5. HOMEPAGE CONTENT - FOOTER</td>
+         <td class="px-6 py-4 whitespace-nowrap"><select class="px-3 py-1 border border-gray-300 rounded text-sm status-select" data-section="footer" data-old-status="pending" onchange="updateContentStatus(this)"> <option value="pending" selected>PENDING</option> <option value="ongoing">ON-GOING</option> <option value="completed">COMPLETED</option> </select></td>
+         <td class="px-6 py-4 whitespace-nowrap"><button onclick="viewDocument('footer', '1lF2MCE3FWdzW6LFs83nFGYdmRrlgvL4R')" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"> VIEW &amp; DOWNLOAD </button></td>
+        </tr>
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div><!-- Translation Tracker Tab -->
+   <div id="translation-tracker" class="tab-content">
+    <div class="bg-white p-6 rounded-lg shadow-md">
+     <h3 class="text-xl font-semibold mb-4 text-gray-800">Translation Progress Tracker</h3><!-- Progress Overview -->
+     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+       <div class="text-2xl font-bold text-yellow-600" id="tracker-pending">
+        2
+       </div>
+       <div class="text-sm text-yellow-700">
+        Pending
+       </div>
+      </div>
+      <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+       <div class="text-2xl font-bold text-blue-600" id="tracker-ongoing">
+        0
+       </div>
+       <div class="text-sm text-blue-700">
+        On-going
+       </div>
+      </div>
+      <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+       <div class="text-2xl font-bold text-green-600" id="tracker-completed">
+        3
+       </div>
+       <div class="text-sm text-green-700">
+        Completed
+       </div>
+      </div>
+     </div><!-- Progress Bar -->
+     <div class="mb-6">
+      <div class="flex justify-between items-center mb-2"><span class="text-sm font-medium text-gray-700">Overall Progress</span> <span class="text-sm font-medium text-gray-700" id="progress-percentage">60%</span>
+      </div>
+      <div class="w-full bg-gray-200 rounded-full h-3">
+       <div class="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full progress-bar" style="width: 60%" id="main-progress-bar"></div>
+      </div>
+     </div><!-- Detailed Tracker Table -->
+     <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+       <thead class="bg-gray-50">
+        <tr>
+         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Section</th>
+         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Translator</th>
+         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Started</th>
+         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Completed</th>
+         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Word Count</th>
+        </tr>
+       </thead>
+       <tbody class="bg-white divide-y divide-gray-200" id="tracker-table-body">
+        <tr>
+         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Homepage Content</td>
+         <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-completed" id="status-homepage">Completed</span></td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">W&amp;A Team</td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10/22/2025</td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10/26/2025</td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">850 words</td>
+        </tr>
+        <tr>
+         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">FAQ Section</td>
+         <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-completed" id="status-faq">Completed</span></td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">W&amp;A Team</td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10/22/2025</td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10/26/2025</td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">56,378 words</td>
+        </tr>
+        <tr>
+         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Info Korporat</td>
+         <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-completed" id="status-infokorporat">Completed</span></td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">W&amp;A Team</td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10/8/2025</td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10/26/2025</td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">129,189 words</td>
+        </tr>
+        <tr>
+         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Quick Access Bar</td>
+         <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-pending" id="status-quickaccess">Pending</span></td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">TBA</td>
+        </tr>
+        <tr>
+         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Footer Content</td>
+         <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-pending" id="status-footer">Pending</span></td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">TBA</td>
+        </tr>
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div><!-- Meetings & Reports Tab -->
+   <div id="meetings" class="tab-content">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><!-- Meeting Scheduler -->
+     <div class="bg-white p-6 rounded-lg shadow-md">
+      <h3 class="text-lg font-semibold mb-4 text-gray-800">Meeting Scheduler</h3>
+      <form onsubmit="addMeeting(event)" class="space-y-4">
+       <div><label class="block text-sm font-medium text-gray-700 mb-1">Meeting Title</label> <input type="text" id="meeting-title" class="w-full p-2 border border-gray-300 rounded" placeholder="e.g., Weekly Translation Review">
+       </div>
+       <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Date</label> <input type="date" id="meeting-date" class="w-full p-2 border border-gray-300 rounded">
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 mb-1">Time</label> <input type="time" id="meeting-time" class="w-full p-2 border border-gray-300 rounded">
+        </div>
+       </div>
+       <div><label class="block text-sm font-medium text-gray-700 mb-1">Attendees</label> <input type="text" id="meeting-attendees" class="w-full p-2 border border-gray-300 rounded" placeholder="Enter attendee names">
+       </div>
+       <div><label class="block text-sm font-medium text-gray-700 mb-1">Agenda</label> <textarea id="meeting-agenda" class="w-full p-2 border border-gray-300 rounded h-20" placeholder="Meeting agenda items..."></textarea>
+       </div><button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Schedule Meeting</button>
+      </form>
+     </div><!-- Upcoming Meetings -->
+     <div class="bg-white p-6 rounded-lg shadow-md">
+      <h3 class="text-lg font-semibold mb-4 text-gray-800">Meeting History &amp; Upcoming</h3>
+      <div id="meetings-list" class="space-y-3"><!-- Default Contact Report Meeting -->
+       <div class="border border-gray-200 rounded-lg p-4 bg-green-50">
+        <div class="flex justify-between items-start mb-2">
+         <h4 class="font-semibold text-gray-800">Project Kickoff Meeting</h4>
+         <div class="flex items-center space-x-2"><span class="text-xs text-green-600 font-semibold">COMPLETED</span> <span class="text-xs text-gray-500">8 October 2025 at 10:00 AM</span>
+         </div>
+        </div>
+        <p class="text-sm text-gray-600 mb-2">Attendees: Puan Rosyila (PMD), Abdul Latiff (W&amp;A), Mohd Sofian (W&amp;A)</p>
+        <p class="text-sm text-gray-600 mb-3">Venue: UKK Office, Kompleks Setia Perdana B, Putrajaya</p>
+        <div class="flex space-x-2"><button onclick="createContactReport('Project Kickoff Meeting', '8 October 2025', 'Puan Rosyila, Abdul Latiff, Mohd Sofian')" class="bg-purple-600 text-white px-3 py-1 rounded text-xs hover:bg-purple-700"> 📄 Contact Report #1 </button> <span class="text-xs text-gray-500 px-2 py-1">Meeting concluded at 10:40 AM</span>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div><!-- Reports Section -->
+    <div class="bg-white p-6 rounded-lg shadow-md mt-6">
+     <h3 class="text-lg font-semibold mb-4 text-gray-800">Auto-Generated Reports</h3>
+     <div class="grid grid-cols-1 md:grid-cols-3 gap-4"><button onclick="openReportsFolder()" class="bg-blue-600 text-white p-4 rounded-lg hover:bg-blue-700">
+       <div class="text-lg font-semibold">
+        Progress Report
+       </div>
+       <div class="text-sm opacity-90">
+        Current status overview
+       </div></button> <button onclick="openReportsFolder()" class="bg-green-600 text-white p-4 rounded-lg hover:bg-green-700">
+       <div class="text-lg font-semibold">
+        Quality Report
+       </div>
+       <div class="text-sm opacity-90">
+        Translation quality metrics
+       </div></button> <button onclick="openReportsFolder()" class="bg-orange-600 text-white p-4 rounded-lg hover:bg-orange-700">
+       <div class="text-lg font-semibold">
+        Timeline Report
+       </div>
+       <div class="text-sm opacity-90">
+        Schedule and milestones
+       </div></button>
+     </div>
+    </div>
+   </div><!-- Resources Tab -->
+   <div id="resources" class="tab-content">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><!-- Enhanced Terminology Database -->
+     <div class="bg-white p-6 rounded-lg shadow-md">
+      <h3 class="text-lg font-semibold mb-4 text-gray-800">Enhanced Terminology Database</h3>
+      <div class="space-y-4">
+       <div class="border-l-4 border-blue-500 pl-4">
+        <h4 class="font-semibold text-blue-700">Government &amp; Corporate Terms</h4>
+        <p class="text-sm text-gray-600">Updated with current translated documents</p>
+       </div>
+       <div class="bg-gray-50 p-4 rounded-lg">
+        <h5 class="font-semibold mb-2">Key Translations:</h5>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+         <div>
+          <strong>Mengenai Kami:</strong> About Us
+         </div>
+         <div>
+          <strong>Pengenalan:</strong> Introduction
+         </div>
+         <div>
+          <strong>Sejarah:</strong> History
+         </div>
+         <div>
+          <strong>Visi, Misi &amp; Objektif:</strong> Vision, Mission &amp; Objectives
+         </div>
+         <div>
+          <strong>Fungsi:</strong> Functions
+         </div>
+         <div>
+          <strong>Piagam Pelanggan:</strong> Customer Charter
+         </div>
+         <div>
+          <strong>Bahagian-bahagian:</strong> Divisions
+         </div>
+         <div>
+          <strong>Jabatan &amp; Agensi:</strong> Departments &amp; Agencies
+         </div>
+         <div>
+          <strong>Carta Organisasi:</strong> Organizational Chart
+         </div>
+         <div>
+          <strong>Anggota Pentadbiran:</strong> Administrative Members
+         </div>
+         <div>
+          <strong>Pentadbiran Am:</strong> General Administration
+         </div>
+         <div>
+          <strong>Soalan Lazim:</strong> Frequently Asked Questions
+         </div>
+         <div>
+          <strong>Direktori:</strong> Directory
+         </div>
+         <div>
+          <strong>Info Rekod:</strong> Record Information
+         </div>
+         <div>
+          <strong>Perolehan:</strong> Procurement
+         </div>
+         <div>
+          <strong>Suara Anda:</strong> Your Voice
+         </div>
+         <div>
+          <strong>Statistik Perkhidmatan:</strong> Service Statistics
+         </div>
+         <div>
+          <strong>Pekeliling:</strong> Circulars
+         </div>
+         <div>
+          <strong>Mesej Integriti:</strong> Integrity Message
+         </div>
+         <div>
+          <strong>Info Perakaunan:</strong> Accounting Information
+         </div>
+         <div>
+          <strong>Dasar Privasi:</strong> Privacy Policy
+         </div>
+         <div>
+          <strong>Dasar Keselamatan:</strong> Security Policy
+         </div>
+         <div>
+          <strong>Penafian:</strong> Disclaimer
+         </div>
+        </div>
+       </div><button onclick="openReportsFolder()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Export Terminology</button>
+      </div>
+     </div><!-- Document Templates -->
+     <div class="bg-white p-6 rounded-lg shadow-md">
+      <h3 class="text-lg font-semibold mb-4 text-gray-800">Document Templates &amp; Resources</h3>
+      <div class="space-y-3">
+       <div class="flex items-center justify-between p-3 border border-gray-200 rounded">
+        <div>
+         <div class="font-medium">
+          Translation Style Guide
+         </div>
+         <div class="text-sm text-gray-500">
+          Government translation standards and guidelines
+         </div>
+        </div><button onclick="openReportsFolder()" class="text-blue-600 hover:text-blue-800">Download</button>
+       </div>
+       <div class="flex items-center justify-between p-3 border border-gray-200 rounded">
+        <div>
+         <div class="font-medium">
+          Quality Checklist
+         </div>
+         <div class="text-sm text-gray-500">
+          Review checklist for translation quality assurance
+         </div>
+        </div><button onclick="openReportsFolder()" class="text-blue-600 hover:text-blue-800">Download</button>
+       </div>
+       <div class="flex items-center justify-between p-3 border border-gray-200 rounded">
+        <div>
+         <div class="font-medium">
+          Project Timeline Template
+         </div>
+         <div class="text-sm text-gray-500">
+          Milestone tracking and deadline management
+         </div>
+        </div><button onclick="openReportsFolder()" class="text-blue-600 hover:text-blue-800">Download</button>
+       </div>
+      </div>
+     </div>
+    </div><!-- Google Drive Integration -->
+    <div class="bg-white p-6 rounded-lg shadow-md mt-6">
+     <h3 class="text-lg font-semibold mb-4 text-gray-800">Google Drive Integration</h3>
+     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+       <h4 class="font-semibold mb-3">Document Management</h4>
+       <ul class="space-y-2 text-sm text-gray-600">
+        <li>• Real-time document collaboration</li>
+        <li>• Version control and history</li>
+        <li>• Direct download from shared folders</li>
+        <li>• Automatic backup and sync</li>
+       </ul><button onclick="openGoogleDrive()" class="mt-3 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Access Google Drive</button>
+      </div>
+      <div>
+       <h4 class="font-semibold mb-3">Collaboration Features</h4>
+       <ul class="space-y-2 text-sm text-gray-600">
+        <li>• Multi-user editing capabilities</li>
+        <li>• Comment and suggestion system</li>
+        <li>• Real-time status updates</li>
+        <li>• Integrated workflow management</li>
+       </ul><button onclick="openReportsFolder()" class="mt-3 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">View Guide</button>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+        // Global Variables with Persistent Storage
+        let projectStats = {
+            pending: 2,
+            ongoing: 0,
+            completed: 3
+        };
+
+        let activityLog = [];
+
+        // Authentication System
+        const validCredentials = {
+            'CLIENT001': 'PMD2024',
+            'admin': 'admin123',
+            'TRANSLATOR001': 'TRANS2024'
+        };
+
+        // Data Persistence Manager
+        class DataPersistenceManager {
+            constructor() {
+                this.storageKey = 'pmd_translation_portal_data';
+                this.backupInterval = 5 * 60 * 1000; // 5 minutes
+                this.googleDriveFolder = 'https://drive.google.com/drive/folders/1Ldzn-Z0nAeTbKNkl0ifuFpbTw-yWMKz0?usp=sharing';
+                this.initializeAutoBackup();
+            }
+
+            saveData() {
+                const dataToSave = {
+                    projectStats,
+                    activityLog,
+                    teamMembers: window.teamMembers || [],
+                    meetings: window.meetings || [],
+                    terminologyDatabase: window.terminologyDatabase || [],
+                    translationMemoryStats: window.translationMemoryStats || {
+                        segments: 1247,
+                        autoCapture: 892,
+                        leverage: 85,
+                        termsCount: 156,
+                        autoTerms: 89,
+                        untranslatedTerms: 12
+                    },
+                    timestamp: new Date().toISOString(),
+                    version: '2.0'
+                };
+                
+                try {
+                    localStorage.setItem(this.storageKey, JSON.stringify(dataToSave));
+                    this.updateBackupStatus('active');
+                    return true;
+                } catch (error) {
+                    console.error('Failed to save data:', error);
+                    createAdvancedNotification('Failed to save data locally. Storage may be full.', 'error');
+                    this.updateBackupStatus('error');
+                    return false;
+                }
+            }
+
+            loadData() {
+                try {
+                    const savedData = localStorage.getItem(this.storageKey);
+                    if (savedData) {
+                        const parsedData = JSON.parse(savedData);
+                        
+                        if (parsedData.projectStats) Object.assign(projectStats, parsedData.projectStats);
+                        if (parsedData.activityLog) activityLog.splice(0, 0, ...parsedData.activityLog);
+                        if (parsedData.teamMembers) window.teamMembers = parsedData.teamMembers;
+                        if (parsedData.meetings) window.meetings = parsedData.meetings;
+                        if (parsedData.terminologyDatabase) window.terminologyDatabase = parsedData.terminologyDatabase;
+                        if (parsedData.translationMemoryStats) window.translationMemoryStats = parsedData.translationMemoryStats;
+                        
+                        return true;
+                    }
+                } catch (error) {
+                    console.error('Failed to load data:', error);
+                    this.updateBackupStatus('error');
+                }
+                return false;
+            }
+
+            exportToGoogleDrive() {
+                const exportData = {
+                    projectName: 'PMD Website Translation Project',
+                    exportDate: new Date().toISOString(),
+                    projectStats,
+                    teamMembers: window.teamMembers || [],
+                    meetings: window.meetings || [],
+                    terminologyDatabase: (window.terminologyDatabase || []).slice(0, 50),
+                    recentActivity: activityLog.slice(0, 20),
+                    translationMemoryStats: window.translationMemoryStats || {},
+                    googleDriveFolder: this.googleDriveFolder
+                };
+
+                const formattedData = this.formatForGoogleDrive(exportData);
+                const dataBlob = new Blob([formattedData], { type: 'text/plain' });
+                const url = URL.createObjectURL(dataBlob);
+                
+                const timestamp = new Date().toISOString().split('T')[0];
+                const filename = `PMD_Portal_Data_Export_${timestamp}.txt`;
+                
+                const downloadLink = document.createElement('a');
+                downloadLink.href = url;
+                downloadLink.download = filename;
+                downloadLink.click();
+                
+                URL.revokeObjectURL(url);
+                
+                createAdvancedNotification(`Data exported: ${filename}. Upload to Google Drive folder.`, 'success');
+                logActivity(`Data exported to Google Drive format: ${filename}`, 'export');
+                
+                setTimeout(() => {
+                    window.open(this.googleDriveFolder, '_blank');
+                }, 1000);
+            }
+
+            formatForGoogleDrive(data) {
+                return `PMD WEBSITE TRANSLATION PROJECT - DATA EXPORT
+Export Date: ${new Date(data.exportDate).toLocaleString()}
+
+=== PROJECT STATISTICS ===
+Completed: ${data.projectStats.completed}
+Ongoing: ${data.projectStats.ongoing}
+Pending: ${data.projectStats.pending}
+
+=== TEAM MEMBERS ===
+${data.teamMembers.length > 0 ? data.teamMembers.map(member => 
+    `- ${member.name} (${member.role})${member.email ? ` - ${member.email}` : ''}`
+).join('\n') : 'No additional team members added'}
+
+=== MEETINGS ===
+${data.meetings.length > 0 ? data.meetings.map(meeting => 
+    `- ${meeting.title} | ${meeting.date} at ${meeting.time}`
+).join('\n') : 'No additional meetings scheduled'}
+
+=== TERMINOLOGY DATABASE ===
+${data.terminologyDatabase.length > 0 ? data.terminologyDatabase.map(term => 
+    `- ${term.malay} → ${term.english}`
+).join('\n') : 'No custom terms added'}
+
+=== RECENT ACTIVITY ===
+${data.recentActivity.map(activity => 
+    `[${activity.timestamp}] ${activity.message}`
+).join('\n')}
+
+Google Drive Folder: ${data.googleDriveFolder}
+
+Instructions:
+1. Save this file to your Google Drive project folder
+2. Share with team members for collaboration
+3. Regular backups ensure data persistence
+4. Import this file back to the portal if needed`;
+            }
+
+            updateBackupStatus(status) {
+                const indicator = document.getElementById('backup-indicator');
+                const statusText = document.getElementById('backup-status');
+                
+                if (indicator && statusText) {
+                    switch (status) {
+                        case 'active':
+                            indicator.className = 'backup-indicator backup-active';
+                            statusText.textContent = 'Auto-backup active';
+                            break;
+                        case 'error':
+                            indicator.className = 'backup-indicator backup-inactive';
+                            statusText.textContent = 'Backup error';
+                            break;
+                        case 'saving':
+                            indicator.className = 'backup-indicator backup-active';
+                            statusText.textContent = 'Saving data...';
+                            break;
+                    }
+                }
+            }
+
+            initializeAutoBackup() {
+                setInterval(() => {
+                    this.updateBackupStatus('saving');
+                    setTimeout(() => {
+                        this.saveData();
+                        logActivity('Automatic data backup completed', 'system');
+                    }, 500);
+                }, this.backupInterval);
+            }
+        }
+
+        // Initialize global variables
+        window.teamMembers = [];
+        window.meetings = [];
+        window.terminologyDatabase = [];
+        window.translationMemoryStats = {
+            segments: 1247,
+            autoCapture: 892,
+            leverage: 85,
+            termsCount: 156,
+            autoTerms: 89,
+            untranslatedTerms: 12
+        };
+
+        const dataManager = new DataPersistenceManager();
+
+        // Authentication Functions
+        function handleLogin(event) {
+            event.preventDefault();
+            const userId = document.getElementById('user-id').value;
+            const password = document.getElementById('password').value;
+            
+            if (validCredentials[userId] && validCredentials[userId] === password) {
+                // Load saved data
+                const dataLoaded = dataManager.loadData();
+                
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                
+                if (dataLoaded) {
+                    createAdvancedNotification('Login successful! Previous session data restored.', 'success');
+                    // Refresh UI with loaded data
+                    updateProjectStats();
+                    refreshTeamMembersList();
+                    refreshMeetingsList();
+                    updateTranslationMemoryUI();
+                } else {
+                    createAdvancedNotification('Login successful! Welcome to PMD Translation Portal.', 'success');
+                }
+                
+                logActivity('User logged in successfully', 'auth');
+            } else {
+                createAdvancedNotification('Invalid credentials. Please check your User ID and Password.', 'error');
+            }
+        }
+
+        function logout() {
+            // Save data before logout
+            dataManager.saveData();
+            
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('user-id').value = '';
+            document.getElementById('password').value = '';
+            createAdvancedNotification('Data saved. Logged out successfully.', 'info');
+            logActivity('User logged out', 'auth');
+        }
+
+        // Data Management Modal
+        function showDataManagement() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl">
+                    <div class="flex justify-between items-center p-6 border-b">
+                        <h3 class="text-xl font-semibold">Data Management & Google Drive Integration</h3>
+                        <button onclick="document.body.removeChild(this.closest('.fixed'))" class="text-gray-500 hover:text-gray-700">✕</button>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-semibold mb-3">📊 Data Persistence</h4>
+                                <div class="space-y-3">
+                                    <div class="bg-green-50 p-3 rounded border border-green-200">
+                                        <div class="text-sm font-medium text-green-800">✅ Auto-backup Active</div>
+                                        <div class="text-xs text-green-600">Data saved every 5 minutes</div>
+                                    </div>
+                                    <button onclick="dataManager.saveData(); createAdvancedNotification('Manual backup completed!', 'success');" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+                                        💾 Manual Backup Now
+                                    </button>
+                                    <button onclick="dataManager.exportToGoogleDrive()" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
+                                        📤 Export to Google Drive
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-3">🔄 Data Import/Export</h4>
+                                <div class="space-y-3">
+                                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                                        <input type="file" id="import-backup" accept=".json,.txt" class="hidden" onchange="handleImportBackup(event)">
+                                        <button onclick="document.getElementById('import-backup').click()" class="bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700">
+                                            📥 Import Backup
+                                        </button>
+                                        <p class="text-xs text-gray-500 mt-2">Upload JSON or TXT backup file</p>
+                                    </div>
+                                    <button onclick="downloadCurrentData()" class="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700">
+                                        📋 Download Current Data
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 bg-blue-50 p-4 rounded border border-blue-200">
+                            <h4 class="font-semibold text-blue-800 mb-2">📁 Google Drive Integration</h4>
+                            <p class="text-sm text-blue-700 mb-3">Your project data is automatically formatted for Google Drive collaboration. Export your data and upload to the shared folder for team access.</p>
+                            <div class="flex space-x-2">
+                                <button onclick="window.open('${dataManager.googleDriveFolder}', '_blank')" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">
+                                    🔗 Open Google Drive Folder
+                                </button>
+                                <button onclick="dataManager.exportToGoogleDrive()" class="bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">
+                                    📤 Export & Upload
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-xs text-gray-500">
+                            <strong>Data Stored:</strong> Team members, meetings, terminology, translation memory stats, activity logs, project statistics
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function handleImportBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    let importedData;
+                    const content = e.target.result;
+                    
+                    // Try to parse as JSON first
+                    try {
+                        importedData = JSON.parse(content);
+                    } catch {
+                        // If not JSON, try to parse as formatted text
+                        importedData = parseFormattedBackup(content);
+                    }
+                    
+                    if (importedData && importedData.projectStats) {
+                        // Restore data
+                        Object.assign(projectStats, importedData.projectStats);
+                        if (importedData.activityLog) activityLog.splice(0, 0, ...importedData.activityLog);
+                        if (importedData.teamMembers) window.teamMembers = importedData.teamMembers;
+                        if (importedData.meetings) window.meetings = importedData.meetings;
+                        if (importedData.terminologyDatabase) window.terminologyDatabase = importedData.terminologyDatabase;
+                        if (importedData.translationMemoryStats) window.translationMemoryStats = importedData.translationMemoryStats;
+                        
+                        // Save to localStorage
+                        dataManager.saveData();
+                        
+                        // Refresh UI
+                        updateProjectStats();
+                        refreshTeamMembersList();
+                        refreshMeetingsList();
+                        updateTranslationMemoryUI();
+                        
+                        createAdvancedNotification('Backup imported successfully!', 'success');
+                        logActivity(`Data backup imported from ${file.name}`, 'backup');
+                    } else {
+                        throw new Error('Invalid backup file format');
+                    }
+                } catch (error) {
+                    createAdvancedNotification('Failed to import backup file. Please check file format.', 'error');
+                    console.error('Import error:', error);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function parseFormattedBackup(content) {
+            // Simple parser for formatted text backup
+            const data = {
+                projectStats: { pending: 2, ongoing: 0, completed: 3 },
+                teamMembers: [],
+                meetings: [],
+                terminologyDatabase: [],
+                activityLog: []
+            };
+            
+            // Extract team members
+            const teamSection = content.match(/=== TEAM MEMBERS ===([\s\S]*?)(?:===|$)/);
+            if (teamSection) {
+                const members = teamSection[1].match(/- (.+?) \((.+?)\)/g);
+                if (members) {
+                    data.teamMembers = members.map(member => {
+                        const match = member.match(/- (.+?) \((.+?)\)/);
+                        return { name: match[1], role: match[2] };
+                    });
+                }
+            }
+            
+            return data;
+        }
+
+        function downloadCurrentData() {
+            const exportData = {
+                projectStats,
+                activityLog,
+                teamMembers: window.teamMembers || [],
+                meetings: window.meetings || [],
+                terminologyDatabase: window.terminologyDatabase || [],
+                translationMemoryStats: window.translationMemoryStats || {},
+                exportDate: new Date().toISOString(),
+                version: '2.0'
+            };
+
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const filename = `PMD_Portal_Backup_${timestamp}.json`;
+            
+            const downloadLink = document.createElement('a');
+            downloadLink.href = url;
+            downloadLink.download = filename;
+            downloadLink.click();
+            
+            URL.revokeObjectURL(url);
+            
+            createAdvancedNotification(`Backup downloaded: ${filename}`, 'success');
+            logActivity(`Data backup downloaded: ${filename}`, 'backup');
+        }
+
+        // Tab System
+        function initializeTabs() {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const tabId = btn.dataset.tab;
+                    
+                    // Update tab buttons
+                    document.querySelectorAll('.tab-btn').forEach(b => {
+                        b.classList.remove('border-blue-500', 'text-blue-600');
+                        b.classList.add('border-transparent', 'text-gray-500');
+                    });
+                    btn.classList.add('border-blue-500', 'text-blue-600');
+                    btn.classList.remove('border-transparent', 'text-gray-500');
+                    
+                    // Update tab content
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(tabId).classList.add('active');
+                    
+                    logActivity(`Navigated to ${tabId} tab`, 'navigation');
+                });
+            });
+        }
+
+        // Project Statistics Management
+        function updateProjectStats() {
+            const total = projectStats.pending + projectStats.ongoing + projectStats.completed;
+            const completedPercentage = total > 0 ? Math.round((projectStats.completed / total) * 100) : 0;
+            
+            // Update progress displays
+            document.getElementById('overall-progress').textContent = completedPercentage + '%';
+            document.getElementById('progress-percentage').textContent = completedPercentage + '%';
+            document.getElementById('main-progress-bar').style.width = completedPercentage + '%';
+            
+            // Update section counts
+            document.getElementById('total-sections').textContent = total;
+            document.getElementById('pending-sections').textContent = projectStats.pending;
+            document.getElementById('ongoing-sections').textContent = projectStats.ongoing;
+            document.getElementById('completed-sections').textContent = projectStats.completed;
+            
+            // Update tracker counts
+            document.getElementById('tracker-pending').textContent = projectStats.pending;
+            document.getElementById('tracker-ongoing').textContent = projectStats.ongoing;
+            document.getElementById('tracker-completed').textContent = projectStats.completed;
+            
+            // Save data after update
+            dataManager.saveData();
+        }
+
+        function updateContentStatus(select) {
+            const section = select.dataset.section;
+            const oldStatus = select.dataset.oldStatus || 'pending';
+            const newStatus = select.value;
+            
+            if (oldStatus === newStatus) return;
+            
+            // Update stats
+            projectStats[oldStatus]--;
+            projectStats[newStatus]++;
+            
+            select.dataset.oldStatus = newStatus;
+            updateProjectStats();
+            
+            // Update tracker status with animation
+            const trackerStatus = document.getElementById(`status-${section}`);
+            if (trackerStatus) {
+                trackerStatus.className = `px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-${newStatus}`;
+                trackerStatus.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
+                
+                // Add pulse animation
+                trackerStatus.style.animation = 'pulse 0.5s ease-in-out';
+                setTimeout(() => {
+                    trackerStatus.style.animation = '';
+                }, 500);
+            }
+            
+            createAdvancedNotification(`Status updated: ${section} is now ${newStatus.toUpperCase()}`, 'success');
+            logActivity(`Status changed: ${section} from ${oldStatus} to ${newStatus}`, 'status');
+        }
+
+        // Team Management
+        function addTeamMember() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md">
+                    <h3 class="text-lg font-semibold mb-4">Add Team Member</h3>
+                    <form onsubmit="submitTeamMember(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                            <input type="text" id="member-name" class="w-full p-2 border border-gray-300 rounded" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                            <select id="member-role" class="w-full p-2 border border-gray-300 rounded" required>
+                                <option value="">Select Role</option>
+                                <option value="Project Manager">Project Manager</option>
+                                <option value="Translator">Translator</option>
+                                <option value="Quality Reviewer">Quality Reviewer</option>
+                                <option value="Client Representative">Client Representative</option>
+                                <option value="Technical Writer">Technical Writer</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email (Optional)</label>
+                            <input type="email" id="member-email" class="w-full p-2 border border-gray-300 rounded">
+                        </div>
+                        <div class="flex space-x-3">
+                            <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Add Member</button>
+                            <button type="button" onclick="document.body.removeChild(this.closest('.fixed'))" class="flex-1 bg-gray-600 text-white py-2 rounded hover:bg-gray-700">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function submitTeamMember(event) {
+            event.preventDefault();
+            const name = document.getElementById('member-name').value.trim();
+            const role = document.getElementById('member-role').value;
+            const email = document.getElementById('member-email').value.trim();
+            
+            if (!name || !role) {
+                createAdvancedNotification('Please fill in all required fields', 'warning');
+                return;
+            }
+            
+            // Add to team members array
+            const newMember = { name, role, email, id: Date.now() };
+            window.teamMembers.push(newMember);
+            
+            // Refresh team list
+            refreshTeamMembersList();
+            
+            // Close modal
+            document.body.removeChild(event.target.closest('.fixed'));
+            
+            createAdvancedNotification(`Team member ${name} added successfully!`, 'success');
+            logActivity(`Team member added: ${name} (${role})`, 'team');
+            
+            // Save data
+            dataManager.saveData();
+        }
+
+        function refreshTeamMembersList() {
+            const teamList = document.getElementById('team-list');
+            
+            // Keep the default PM entry and add custom members
+            const defaultPM = teamList.querySelector('.bg-blue-50');
+            teamList.innerHTML = '';
+            if (defaultPM) teamList.appendChild(defaultPM);
+            
+            if (window.teamMembers && window.teamMembers.length > 0) {
+                window.teamMembers.forEach(member => {
+                    const memberDiv = document.createElement('div');
+                    memberDiv.className = 'flex items-center justify-between bg-green-50 p-3 rounded-lg fade-in border border-green-200';
+                    memberDiv.innerHTML = `
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">${member.name.charAt(0).toUpperCase()}</div>
+                            <div>
+                                <div class="font-medium text-gray-900">${member.name}</div>
+                                <div class="text-sm text-gray-600">${member.role}</div>
+                                ${member.email ? `<div class="text-xs text-gray-500">${member.email}</div>` : ''}
+                            </div>
+                        </div>
+                        <button onclick="removeTeamMember(${member.id})" class="text-red-500 hover:text-red-700 text-sm px-2 py-1 rounded hover:bg-red-50">Remove</button>
+                    `;
+                    teamList.appendChild(memberDiv);
+                });
+            }
+        }
+
+        function removeTeamMember(memberId) {
+            const memberIndex = window.teamMembers.findIndex(m => m.id === memberId);
+            if (memberIndex > -1) {
+                const memberName = window.teamMembers[memberIndex].name;
+                if (confirm(`Remove ${memberName} from the team?`)) {
+                    window.teamMembers.splice(memberIndex, 1);
+                    refreshTeamMembersList();
+                    createAdvancedNotification(`${memberName} removed from team`, 'info');
+                    logActivity(`Team member removed: ${memberName}`, 'team');
+                    dataManager.saveData();
+                }
+            }
+        }
+
+        // Meeting Management
+        function addMeeting(event) {
+            event.preventDefault();
+            const title = document.getElementById('meeting-title').value.trim();
+            const date = document.getElementById('meeting-date').value;
+            const time = document.getElementById('meeting-time').value;
+            const attendees = document.getElementById('meeting-attendees').value.trim();
+            const agenda = document.getElementById('meeting-agenda').value.trim();
+            
+            if (!title || !date || !time) {
+                createAdvancedNotification('Please fill in all required fields (Title, Date, Time)', 'warning');
+                return;
+            }
+            
+            const newMeeting = {
+                id: Date.now(),
+                title,
+                date,
+                time,
+                attendees,
+                agenda
+            };
+            
+            window.meetings.push(newMeeting);
+            refreshMeetingsList();
+            
+            // Reset form
+            event.target.reset();
+            createAdvancedNotification('Meeting scheduled successfully!', 'success');
+            logActivity(`Meeting scheduled: ${title} on ${date} at ${time}`, 'meeting');
+            dataManager.saveData();
+        }
+
+        function refreshMeetingsList() {
+            const meetingsList = document.getElementById('meetings-list');
+            
+            // Keep the default meeting and add custom meetings
+            const defaultMeeting = meetingsList.querySelector('.bg-green-50');
+            meetingsList.innerHTML = '';
+            if (defaultMeeting) meetingsList.appendChild(defaultMeeting);
+            
+            if (window.meetings && window.meetings.length > 0) {
+                window.meetings.forEach(meeting => {
+                    const meetingDate = new Date(meeting.date + 'T' + meeting.time);
+                    const now = new Date();
+                    const isPast = meetingDate < now;
+                    const statusClass = isPast ? 'bg-gray-50 border-gray-200' : 'bg-blue-50 border-blue-200';
+                    const statusText = isPast ? 'COMPLETED' : 'SCHEDULED';
+                    const statusColor = isPast ? 'text-gray-600' : 'text-blue-600';
+                    
+                    const meetingDiv = document.createElement('div');
+                    meetingDiv.className = `border rounded-lg p-4 fade-in ${statusClass}`;
+                    meetingDiv.innerHTML = `
+                        <div class="flex justify-between items-start mb-3">
+                            <h4 class="font-semibold text-gray-800">${meeting.title}</h4>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs ${statusColor} font-semibold">${statusText}</span>
+                                <span class="text-xs text-gray-500">${meeting.date} at ${meeting.time}</span>
+                            </div>
+                        </div>
+                        ${meeting.attendees ? `<p class="text-sm text-gray-600 mb-2"><strong>Attendees:</strong> ${meeting.attendees}</p>` : ''}
+                        ${meeting.agenda ? `<p class="text-sm text-gray-600 mb-3"><strong>Agenda:</strong> ${meeting.agenda}</p>` : ''}
+                        <div class="flex space-x-2">
+                            <button onclick="sendMeetingInvite('${meeting.title}', '${meeting.date}', '${meeting.time}', '${meeting.attendees}', '${meeting.agenda}')" 
+                                    class="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700">
+                                📧 Send Invite
+                            </button>
+                            <button onclick="removeMeeting(${meeting.id})" 
+                                    class="bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    `;
+                    meetingsList.appendChild(meetingDiv);
+                });
+            }
+        }
+
+        function removeMeeting(meetingId) {
+            const meetingIndex = window.meetings.findIndex(m => m.id === meetingId);
+            if (meetingIndex > -1) {
+                const meetingTitle = window.meetings[meetingIndex].title;
+                if (confirm(`Delete meeting "${meetingTitle}"?`)) {
+                    window.meetings.splice(meetingIndex, 1);
+                    refreshMeetingsList();
+                    createAdvancedNotification(`Meeting "${meetingTitle}" deleted`, 'info');
+                    logActivity(`Meeting deleted: ${meetingTitle}`, 'meeting');
+                    dataManager.saveData();
+                }
+            }
+        }
+
+        function sendMeetingInvite(title, date, time, attendees, agenda) {
+            const subject = `Meeting Invitation: ${title} - PMD Translation Project`;
+            const body = `Dear Team,
+
+You are invited to attend the following meeting:
+
+Meeting: ${title}
+Date: ${date}
+Time: ${time}
+Attendees: ${attendees}
+
+Agenda:
+${agenda}
+
+Please confirm your attendance.
+
+Best regards,
+PMD Translation Project Team
+
+Contact Information:
+Abdul Latiff: abdullatiff@white-associates.net
+Sofian: sofian@white-associates.net`;
+
+            const mailtoLink = `mailto:abdullatiff@white-associates.net,sofian@white-associates.net?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            window.open(mailtoLink, '_blank');
+            
+            createAdvancedNotification('Meeting invite email opened in your default email client', 'success');
+            logActivity(`Meeting invite sent for: ${title}`, 'email');
+        }
+
+        // Translation Memory UI Updates
+        function updateTranslationMemoryUI() {
+            if (window.translationMemoryStats) {
+                const stats = window.translationMemoryStats;
+                document.getElementById('tm-segments').textContent = stats.segments;
+                document.getElementById('tm-auto').textContent = stats.autoCapture;
+                document.getElementById('tm-leverage').textContent = stats.leverage + '%';
+                document.getElementById('tm-progress').style.width = stats.leverage + '%';
+                document.getElementById('terms-count').textContent = stats.termsCount;
+                document.getElementById('terms-auto').textContent = stats.autoTerms;
+                document.getElementById('terms-untranslated').textContent = stats.untranslatedTerms;
+            }
+        }
+
+        // Document Management Functions
+        function viewDocument(section, fileId) {
+            const titles = {
+                'homepage': 'Homepage Content (Header, Body & Footer)',
+                'faq': 'FAQ Section',
+                'infokorporat': 'Info Korporat - Main Menu Navigation',
+                'quickaccess': 'Quick Access Bar',
+                'footer': 'Footer Content'
+            };
+            
+            try {
+                const fullUrl = `https://docs.google.com/document/d/${fileId}/edit?usp=sharing`;
+                window.open(fullUrl, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
+                createAdvancedNotification(`Opening ${titles[section]} in new tab`, 'info');
+                logActivity(`Document accessed: ${titles[section]}`, 'document');
+            } catch (error) {
+                createAdvancedNotification('Error opening document. Please try again.', 'error');
+                console.error('Document viewing error:', error);
+            }
+        }
+
+        // Google Drive Integration
+        function openGoogleDrive() {
+            try {
+                window.open('https://drive.google.com/drive/folders/1yhsvFnNl6mY3BuNHIIArb7PhbyBlFNsd?usp=sharing', '_blank');
+                createAdvancedNotification('Opening project Google Drive folder...', 'info');
+                logActivity('Google Drive project folder accessed', 'drive');
+            } catch (error) {
+                createAdvancedNotification('Error opening Google Drive. Please check your connection.', 'error');
+            }
+        }
+
+        function openReportsFolder() {
+            try {
+                const reportsUrl = 'https://drive.google.com/drive/folders/1oBkVXPYIH99UkakyyJohT6XFMmmzi1dX?usp=sharing';
+                window.open(reportsUrl, '_blank');
+                createAdvancedNotification('Opening reports folder...', 'info');
+                logActivity('Reports folder accessed', 'report');
+            } catch (error) {
+                createAdvancedNotification('Error opening reports folder. Please try again.', 'error');
+            }
+        }
+
+        function createContactReport(title, date, attendees) {
+            try {
+                window.open('https://bit.ly/49lI8tC', '_blank');
+                createAdvancedNotification('Contact Report #1 opened successfully', 'success');
+                logActivity('Contact Report #1 accessed - Project Kickoff Meeting details', 'report');
+            } catch (error) {
+                createAdvancedNotification('Error opening Contact Report. Please try again.', 'error');
+            }
+        }
+
+        // CAT Framework Functions
+        function openTerminologyManager() {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg shadow-2xl w-full max-w-4xl h-5/6 flex flex-col">
+                    <div class="flex justify-between items-center p-6 border-b">
+                        <h3 class="text-xl font-semibold">Terminology Database Manager</h3>
+                        <button onclick="document.body.removeChild(this.closest('.fixed'))" class="text-gray-500 hover:text-gray-700">✕</button>
+                    </div>
+                    <div class="flex-1 p-6 overflow-y-auto">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-semibold mb-3">Add New Term</h4>
+                                <form onsubmit="addNewTerm(event)" class="space-y-3">
+                                    <input type="text" id="new-malay-term" placeholder="Malay Term" class="w-full p-2 border rounded" required>
+                                    <input type="text" id="new-english-term" placeholder="English Translation" class="w-full p-2 border rounded" required>
+                                    <select id="term-category" class="w-full p-2 border rounded">
+                                        <option value="government">Government</option>
+                                        <option value="corporate">Corporate</option>
+                                        <option value="technical">Technical</option>
+                                        <option value="general">General</option>
+                                    </select>
+                                    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Add Term</button>
+                                </form>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold mb-3">Recent Terms</h4>
+                                <div id="recent-terms" class="space-y-2 max-h-40 overflow-y-auto">
+                                    <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                        <span class="text-sm"><strong>Penafian:</strong> Disclaimer</span>
+                                        <button onclick="removeTerm(this)" class="text-red-500 hover:text-red-700 text-sm">Remove</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function addNewTerm(event) {
+            event.preventDefault();
+            const malayTerm = document.getElementById('new-malay-term').value;
+            const englishTerm = document.getElementById('new-english-term').value;
+            const category = document.getElementById('term-category').value;
+            
+            // Add to terminology database
+            const newTerm = { malay: malayTerm, english: englishTerm, category, id: Date.now() };
+            window.terminologyDatabase.push(newTerm);
+            
+            // Add to recent terms display
+            const recentTerms = document.getElementById('recent-terms');
+            const termDiv = document.createElement('div');
+            termDiv.className = 'flex justify-between items-center p-2 bg-gray-50 rounded';
+            termDiv.innerHTML = `
+                <span class="text-sm"><strong>${malayTerm}:</strong> ${englishTerm} <span class="text-xs text-gray-500">(${category})</span></span>
+                <button onclick="removeTerm(this)" class="text-red-500 hover:text-red-700 text-sm">Remove</button>
+            `;
+            recentTerms.insertBefore(termDiv, recentTerms.firstChild);
+            
+            // Update terminology count
+            window.translationMemoryStats.termsCount++;
+            updateTranslationMemoryUI();
+            
+            // Clear form
+            event.target.reset();
+            
+            createAdvancedNotification(`Term added: "${malayTerm}" → "${englishTerm}"`, 'success');
+            logActivity(`New term added: ${malayTerm} → ${englishTerm}`, 'terminology');
+            dataManager.saveData();
+        }
+
+        function removeTerm(button) {
+            button.parentElement.remove();
+            window.translationMemoryStats.termsCount = Math.max(0, window.translationMemoryStats.termsCount - 1);
+            updateTranslationMemoryUI();
+            createAdvancedNotification('Term removed from database', 'info');
+            dataManager.saveData();
+        }
+
+        function openQualityChecker() {
+            createAdvancedNotification('Opening quality checker system...', 'info');
+        }
+
+        function openTimelineManager() {
+            createAdvancedNotification('Opening timeline management system...', 'info');
+        }
+
+        function addTerm() {
+            openTerminologyManager();
+        }
+
+        function viewLearningLog() {
+            createAdvancedNotification('Opening auto-learning system log...', 'info');
+        }
+
+        // Date Management
+        function updateDaysRemaining() {
+            const startDateInput = document.getElementById('start-date');
+            const endDateInput = document.getElementById('end-date');
+            const daysRemainingElement = document.getElementById('days-remaining');
+            
+            if (!startDateInput.value || !endDateInput.value) {
+                daysRemainingElement.textContent = 'Set dates';
+                return;
+            }
+            
+            const startDate = new Date(startDateInput.value);
+            const endDate = new Date(endDateInput.value);
+            const today = new Date();
+            
+            if (endDate <= startDate) {
+                daysRemainingElement.textContent = 'Invalid range';
+                daysRemainingElement.className = 'font-semibold text-red-600';
+                return;
+            }
+            
+            const timeDiff = endDate.getTime() - today.getTime();
+            const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+            
+            if (daysDiff > 0) {
+                daysRemainingElement.textContent = daysDiff + ' days';
+                daysRemainingElement.className = daysDiff <= 7 ? 'font-semibold text-red-600' : 
+                                                daysDiff <= 30 ? 'font-semibold text-yellow-600' : 
+                                                'font-semibold text-green-600';
+            } else {
+                daysRemainingElement.textContent = Math.abs(daysDiff) + ' days overdue';
+                daysRemainingElement.className = 'font-semibold text-red-600';
+            }
+        }
+
+        // Enhanced Notification System
+        function createAdvancedNotification(message, type = 'info', duration = 4000) {
+            const notification = document.createElement('div');
+            const icons = {
+                'success': '✅',
+                'error': '❌',
+                'warning': '⚠️',
+                'info': 'ℹ️'
+            };
+            const colors = {
+                'success': 'bg-green-500',
+                'error': 'bg-red-500',
+                'warning': 'bg-yellow-500',
+                'info': 'bg-blue-500'
+            };
+            
+            notification.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-xl z-50 fade-in max-w-md`;
+            notification.innerHTML = `
+                <div class="flex items-start space-x-3">
+                    <span class="text-lg">${icons[type]}</span>
+                    <div class="flex-1">
+                        <div class="font-medium">${message}</div>
+                        <div class="w-full bg-white bg-opacity-20 rounded-full h-1 mt-2">
+                            <div class="bg-white h-1 rounded-full transition-all duration-${duration}" style="width: 100%; animation: shrink ${duration}ms linear forwards;"></div>
+                        </div>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="text-white hover:text-gray-200 ml-2">×</button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, duration);
+        }
+
+        // Activity Logging System
+        function logActivity(message, type = 'general') {
+            const timestamp = new Date().toLocaleString();
+            const activity = {
+                timestamp,
+                message,
+                type,
+                id: Date.now()
+            };
+            
+            activityLog.unshift(activity);
+            
+            // Keep only last 100 activities
+            if (activityLog.length > 100) {
+                activityLog = activityLog.slice(0, 100);
+            }
+            
+            // Auto-save after logging activity
+            dataManager.saveData();
+        }
+
+        // Initialize Application
+        function initializeApp() {
+            // Initialize project statistics
+            updateProjectStats();
+            
+            // Set default dates
+            const today = new Date().toISOString().split('T')[0];
+            const endDate = new Date();
+            endDate.setMonth(endDate.getMonth() + 2);
+            
+            document.getElementById('start-date').value = today;
+            document.getElementById('end-date').value = endDate.toISOString().split('T')[0];
+            
+            // Set up event listeners
+            document.getElementById('start-date').addEventListener('change', updateDaysRemaining);
+            document.getElementById('end-date').addEventListener('change', updateDaysRemaining);
+            
+            // Initialize tabs
+            initializeTabs();
+            
+            // Initial calculations
+            updateDaysRemaining();
+            
+            // Log initial activity
+            logActivity('PMD Translation Portal initialized successfully', 'general');
+            
+            // Show welcome notification
+            setTimeout(() => {
+                createAdvancedNotification('Welcome to PMD Translation Portal! Data persistence is now active.', 'success');
+            }, 1000);
+        }
+
+        // Initialize everything when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
+
+        // Add CSS for shrink animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shrink {
+                from { width: 100%; }
+                to { width: 0%; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'995f6a69005497fa',t:'MTc2MTcwNjc1My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

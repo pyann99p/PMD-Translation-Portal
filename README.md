@@ -1,4 +1,3 @@
-# PMD-Translation-Portal
 # PMD Website Translation Project Management Portal
 
 A comprehensive project management portal for the PMD (Prime Minister's Department) website translation project, featuring advanced CAT (Computer-Assisted Translation) framework integration and real-time collaboration tools.
