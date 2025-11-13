@@ -205,7 +205,7 @@
          Overall Progress
         </div>
         <div class="text-2xl font-bold" id="overall-progress">
-         60%
+         100%
         </div>
        </div>
       </div><button onclick="showDataManagement()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"> 💾 Data Management </button> <button onclick="logout()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"> Logout </button>
@@ -225,11 +225,11 @@
       <div class="space-y-3">
        <div class="flex justify-between"><span class="text-gray-600">Total Sections:</span> <span class="font-semibold" id="total-sections">5</span>
        </div>
-       <div class="flex justify-between"><span class="text-gray-600">Completed:</span> <span class="font-semibold text-green-600" id="completed-sections">3</span>
+       <div class="flex justify-between"><span class="text-gray-600">Completed:</span> <span class="font-semibold text-green-600" id="completed-sections">5</span>
        </div>
        <div class="flex justify-between"><span class="text-gray-600">On-going:</span> <span class="font-semibold text-blue-600" id="ongoing-sections">0</span>
        </div>
-       <div class="flex justify-between"><span class="text-gray-600">Pending:</span> <span class="font-semibold text-yellow-600" id="pending-sections">2</span>
+       <div class="flex justify-between"><span class="text-gray-600">Pending:</span> <span class="font-semibold text-yellow-600" id="pending-sections">0</span>
        </div>
       </div>
      </div><!-- Timeline -->
@@ -299,7 +299,7 @@
        </div>
       </div>
       <div class="border border-gray-200 rounded-lg p-4">
-       <h4 class="font-semibold text-yellow-600 mb-2">⏳ 4. QUICK ACCESS BAR</h4>
+       <h4 class="font-semibold text-green-600 mb-2">✅ 4. QUICK ACCESS BAR</h4>
        <ul class="text-sm text-gray-600 space-y-1">
         <li>• Direktori</li>
         <li>• Info Rekod</li>
@@ -310,19 +310,19 @@
         <li>• Mesej Integriti</li>
         <li>• Info Perakaunan</li>
        </ul>
-       <div class="mt-2 text-xs text-yellow-600 font-semibold">
-        PENDING
+       <div class="mt-2 text-xs text-green-600 font-semibold">
+        COMPLETED
        </div>
       </div>
       <div class="border border-gray-200 rounded-lg p-4">
-       <h4 class="font-semibold text-yellow-600 mb-2">⏳ 5. FOOTER CONTENT</h4>
+       <h4 class="font-semibold text-green-600 mb-2">✅ 5. FOOTER CONTENT</h4>
        <ul class="text-sm text-gray-600 space-y-1">
         <li>• Dasar Privasi</li>
         <li>• Dasar Keselamatan</li>
         <li>• Penafian</li>
        </ul>
-       <div class="mt-2 text-xs text-yellow-600 font-semibold">
-        PENDING
+       <div class="mt-2 text-xs text-green-600 font-semibold">
+        COMPLETED
        </div>
       </div>
      </div>
@@ -475,13 +475,13 @@
         </tr>
         <tr>
          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">4. HOMEPAGE CONTENT - BODY: QUICK ACCESS BAR</td>
-         <td class="px-6 py-4 whitespace-nowrap"><select class="px-3 py-1 border border-gray-300 rounded text-sm status-select" data-section="quickaccess" data-old-status="pending" onchange="updateContentStatus(this)"> <option value="pending" selected>PENDING</option> <option value="ongoing">ON-GOING</option> <option value="completed">COMPLETED</option> </select></td>
-         <td class="px-6 py-4 whitespace-nowrap"><button onclick="viewDocument('quickaccess', '1lF2MCE3FWdzW6LFs83nFGYdmRrlgvL4R')" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"> VIEW &amp; DOWNLOAD </button></td>
+         <td class="px-6 py-4 whitespace-nowrap"><select class="px-3 py-1 border border-gray-300 rounded text-sm status-select" data-section="quickaccess" data-old-status="completed" onchange="updateContentStatus(this)"> <option value="pending">PENDING</option> <option value="ongoing">ON-GOING</option> <option value="completed" selected>COMPLETED</option> </select></td>
+         <td class="px-6 py-4 whitespace-nowrap"><button onclick="viewDocument('quickaccess', '1Mv7gZMMorFQ8idyN2fMyr6rdvUM2Nkt7')" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"> VIEW &amp; DOWNLOAD </button></td>
         </tr>
         <tr>
          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">5. HOMEPAGE CONTENT - FOOTER</td>
-         <td class="px-6 py-4 whitespace-nowrap"><select class="px-3 py-1 border border-gray-300 rounded text-sm status-select" data-section="footer" data-old-status="pending" onchange="updateContentStatus(this)"> <option value="pending" selected>PENDING</option> <option value="ongoing">ON-GOING</option> <option value="completed">COMPLETED</option> </select></td>
-         <td class="px-6 py-4 whitespace-nowrap"><button onclick="viewDocument('footer', '1lF2MCE3FWdzW6LFs83nFGYdmRrlgvL4R')" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"> VIEW &amp; DOWNLOAD </button></td>
+         <td class="px-6 py-4 whitespace-nowrap"><select class="px-3 py-1 border border-gray-300 rounded text-sm status-select" data-section="footer" data-old-status="completed" onchange="updateContentStatus(this)"> <option value="pending">PENDING</option> <option value="ongoing">ON-GOING</option> <option value="completed" selected>COMPLETED</option> </select></td>
+         <td class="px-6 py-4 whitespace-nowrap"><button onclick="viewDocument('footer', '14haCHllUUTZszNAZxxry0TC7M_sDxgOa')" class="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700"> VIEW &amp; DOWNLOAD </button></td>
         </tr>
        </tbody>
       </table>
@@ -494,7 +494,7 @@
      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
        <div class="text-2xl font-bold text-yellow-600" id="tracker-pending">
-        2
+        0
        </div>
        <div class="text-sm text-yellow-700">
         Pending
@@ -510,7 +510,7 @@
       </div>
       <div class="bg-green-50 p-4 rounded-lg border border-green-200">
        <div class="text-2xl font-bold text-green-600" id="tracker-completed">
-        3
+        5
        </div>
        <div class="text-sm text-green-700">
         Completed
@@ -518,10 +518,10 @@
       </div>
      </div><!-- Progress Bar -->
      <div class="mb-6">
-      <div class="flex justify-between items-center mb-2"><span class="text-sm font-medium text-gray-700">Overall Progress</span> <span class="text-sm font-medium text-gray-700" id="progress-percentage">60%</span>
+      <div class="flex justify-between items-center mb-2"><span class="text-sm font-medium text-gray-700">Overall Progress</span> <span class="text-sm font-medium text-gray-700" id="progress-percentage">100%</span>
       </div>
       <div class="w-full bg-gray-200 rounded-full h-3">
-       <div class="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full progress-bar" style="width: 60%" id="main-progress-bar"></div>
+       <div class="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full progress-bar" style="width: 100%" id="main-progress-bar"></div>
       </div>
      </div><!-- Detailed Tracker Table -->
      <div class="overflow-x-auto">
@@ -563,19 +563,19 @@
         </tr>
         <tr>
          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Quick Access Bar</td>
-         <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-pending" id="status-quickaccess">Pending</span></td>
-         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
-         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
-         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
-         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">TBA</td>
+         <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-completed" id="status-quickaccess">Completed</span></td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">W&amp;A Team</td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">31/10/2025</td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">5/11/2025</td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">27,962 words</td>
         </tr>
         <tr>
          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Footer Content</td>
-         <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-pending" id="status-footer">Pending</span></td>
-         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
-         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
-         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
-         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">TBA</td>
+         <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full status-completed" id="status-footer">Completed</span></td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">W&amp;A Team</td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">31/10/2025</td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">5/11/2025</td>
+         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2,045 words</td>
         </tr>
        </tbody>
       </table>
@@ -791,9 +791,9 @@
   <script>
         // Global Variables with Persistent Storage
         let projectStats = {
-            pending: 2,
+            pending: 0,
             ongoing: 0,
-            completed: 3
+            completed: 5
         };
 
         let activityLog = [];
@@ -1146,7 +1146,7 @@ Instructions:
         function parseFormattedBackup(content) {
             // Simple parser for formatted text backup
             const data = {
-                projectStats: { pending: 2, ongoing: 0, completed: 3 },
+                projectStats: { pending: 0, ongoing: 0, completed: 5 },
                 teamMembers: [],
                 meetings: [],
                 terminologyDatabase: [],
@@ -1254,6 +1254,15 @@ Instructions:
             const newStatus = select.value;
             
             if (oldStatus === newStatus) return;
+            
+            // Validate status change
+            if (oldStatus === 'completed' && newStatus !== 'completed') {
+                const confirmChange = confirm(`Are you sure you want to change ${section} from COMPLETED back to ${newStatus.toUpperCase()}?`);
+                if (!confirmChange) {
+                    select.value = oldStatus;
+                    return;
+                }
+            }
             
             // Update stats
             projectStats[oldStatus]--;
